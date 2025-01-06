@@ -59,6 +59,7 @@ p.setRealTimeSimulation(1)
 p.resetDebugVisualizerCamera(
     cameraDistance=0.5, cameraYaw=90, cameraPitch=0, cameraTargetPosition=[0, 0, 0]
 )
+p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
 
 # Load ground plane
 planeId = p.loadURDF("plane.urdf")
@@ -93,8 +94,11 @@ while True:
     analogSignal = clamp(balanceControl, -255, 255)
     percentage = analogSignal / 255
     velocity = percentage * max_velocity
-    if abs(pitch) > 30.0:
-        velocity = 0.0
+    left_wheel_velocity = -(velocity + random.uniform(-1, 1))
+    right_wheel_velocity = velocity + random.uniform(-1, 1)
+    if abs(pitch) > 45.0:
+        left_wheel_velocity = 0.0
+        right_wheel_velocity = 0.0
     left_encoder = p.getJointState(robotId, leftWheelIndex)[0]
     right_encoder = p.getJointState(robotId, rightWheelIndex)[0]
     print(f"pitch: {pitch:.2f}, L: {left_encoder:.2f}, R: {right_encoder:.2f}")
@@ -103,14 +107,14 @@ while True:
         robotId,
         leftWheelIndex,
         p.VELOCITY_CONTROL,
-        targetVelocity=-(velocity + random.uniform(-1, 1)),
+        targetVelocity=left_wheel_velocity,
         force=max_force,
     )
     p.setJointMotorControl2(
         robotId,
         rightWheelIndex,
         p.VELOCITY_CONTROL,
-        targetVelocity=velocity + random.uniform(-1, 1),
+        targetVelocity=right_wheel_velocity,
         force=max_force,
     )
 
