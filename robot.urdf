@@ -23,6 +23,7 @@
         <box size="0.215 0.0625 0.135"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0.0 0.0 0.05"/>
+      <contact_coefficients mu="1" />
     </collision>
     <inertial>
       <mass value="0.7517"/>
@@ -44,7 +45,7 @@
         <cylinder length="0.025" radius="0.0325"/>
       </geometry>
       <origin rpy="0 1.5707963 0" xyz="0 0 0"/>
-      <contact_coefficients mu="1" />
+      <contact_coefficients mu="0.7" />
     </collision>
     <inertial>
       <mass value="0.0385"/>
@@ -66,7 +67,7 @@
         <cylinder length="0.025" radius="0.0325"/>
       </geometry>
       <origin rpy="0 1.5707963 0" xyz="0 0 0"/>
-      <contact_coefficients mu="1" />
+      <contact_coefficients mu="0.7" />
     </collision>
     <inertial>
       <mass value="0.1"/>

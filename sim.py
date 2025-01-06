@@ -3,8 +3,16 @@ import time
 import pybullet_data
 import math
 import numpy as np
+import random
 
-dt = 0.01
+FPS = 60
+dt = 1 / FPS
+max_velocity = 5  # rad/sec
+max_force = 0.1
+
+
+def add_noise(value):
+    return random.uniform(-0.5, 0.5) + value
 
 
 def clamp(value, min, max):
@@ -37,7 +45,6 @@ class PID:
 
         # Clamp output
         output = p_out + i_out + d_out
-        output = clamp(output, -255, 255)
 
         self.prev_error = error
 
@@ -49,6 +56,9 @@ physicsClient = p.connect(p.GUI)
 p.setAdditionalSearchPath(pybullet_data.getDataPath())
 p.setGravity(0, 0, -9.81)
 p.setRealTimeSimulation(1)
+p.resetDebugVisualizerCamera(
+    cameraDistance=0.5, cameraYaw=90, cameraPitch=0, cameraTargetPosition=[0, 0, 0]
+)
 
 # Load ground plane
 planeId = p.loadURDF("plane.urdf")
@@ -76,26 +86,32 @@ while True:
     robotPos, robotOrn = p.getBasePositionAndOrientation(robotId)
     robotEuler = p.getEulerFromQuaternion(robotOrn)
     pitch = robotEuler[0] * 180 / math.pi
+    pitch = add_noise(pitch)
 
     # Simple P controller for balance
     balanceControl = controller.get_signal(pitch, 0.0)
     analogSignal = clamp(balanceControl, -255, 255)
     percentage = analogSignal / 255
-    velocity = percentage * 33.16
+    velocity = percentage * max_velocity
+    if abs(pitch) > 30.0:
+        velocity = 0.0
+    left_encoder = p.getJointState(robotId, leftWheelIndex)[0]
+    right_encoder = p.getJointState(robotId, rightWheelIndex)[0]
+    print(f"pitch: {pitch:.2f}, L: {left_encoder:.2f}, R: {right_encoder:.2f}")
     # Apply wheel controls
     p.setJointMotorControl2(
         robotId,
         leftWheelIndex,
         p.VELOCITY_CONTROL,
-        targetVelocity=-velocity,
-        force=maxForce,
+        targetVelocity=-(velocity + random.uniform(-1, 1)),
+        force=max_force,
     )
     p.setJointMotorControl2(
         robotId,
         rightWheelIndex,
         p.VELOCITY_CONTROL,
-        targetVelocity=velocity,
-        force=maxForce,
+        targetVelocity=velocity + random.uniform(-1, 1),
+        force=max_force,
     )
 
     time.sleep(dt)
